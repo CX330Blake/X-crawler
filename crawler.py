@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
@@ -70,16 +71,34 @@ password_input = driver.find_element(
 password_input.send_keys(password)
 password_input.send_keys(Keys.ENTER)
 
-keyword = input("搜尋關鍵字: ")
-start_date = input("起始日期(yyyy/mm/dd): ")
-end_date = input("終止日期(yyyy/mm/dd): ")
-start_month = start_date[:4]
-start_day = start_date[4:6]
-start_year = start_date[6:]
-end_month = end_date[:4]
-end_day = end_date[4:6]
-end_year = end_date[6:]
+# keyword = input("搜尋關鍵字: ")
+# start_date = input("起始日期(yyyy/mm/dd): ").replace("/", "")
+# end_date = input("終止日期(yyyy/mm/dd): ").replace("/", "")
+keyword = "tsla"
+start_date = "20200101"
+end_date = "20220101"
+start_year = start_date[:4]
+start_month = int(start_date[4:6].replace("0", ""))
+start_day = int(start_date[6:].replace("0", ""))
+end_year = end_date[:4]
+end_month = int(end_date[4:6].replace("0", ""))
+end_day = int(end_date[6:].replace("0", ""))
+WebDriverWait(driver, 20).until(
+    EC.presence_of_element_located((By.XPATH, "//input[@name='allOfTheseWords']"))
+)
 search_box = driver.find_element(By.XPATH, '//input[@name="allOfTheseWords"]')
 search_box.send_keys(keyword)
+start_month_selector = Select(driver.find_element("id", "SELECTOR_2"))
+start_day_selector = Select(driver.find_element("id", "SELECTOR_3"))
+start_year_selector = Select(driver.find_element("id", "SELECTOR_4"))
+end_month_selector = Select(driver.find_element("id", "SELECTOR_5"))
+end_day_selector = Select(driver.find_element("id", "SELECTOR_6"))
+end_year_selector = Select(driver.find_element("id", "SELECTOR_7"))
 
+start_month_selector.select_by_index(start_month)
+start_day_selector.select_by_index(start_day)
+start_year_selector.select_by_value(start_year)
+end_month_selector.select_by_index(end_month)
+end_day_selector.select_by_index(end_day)
+end_year_selector.select_by_value(end_year)
 time.sleep(30)
