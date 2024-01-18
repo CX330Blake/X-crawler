@@ -20,7 +20,18 @@ driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_option
 email = "AN4126068@gs.ncku.edu.tw"
 username = "ccep_an4126068"
 password = "an4126068"
-url = "https://twitter.com/search-advanced"
+
+keyword = "tsla"
+start_date = "2020-01-01"
+end_date = "2022-01-01"
+# keyword = input("請輸入關鍵字(以空格分隔): ")
+# start_date = input("請輸入起始日期(yyyy-mm-dd): ")
+# end_date = input("請輸入終止日期(yyyy-mm-dd): ")
+since = "since:" + start_date
+until = "until:" + end_date
+search = f"{keyword} {since} {until}".replace(" ", "%20").replace(":", "%3A")
+url = f"https://twitter.com/search?q={search}"
+# https://twitter.com/search?q=tsla%20since%3A2020-01-01%20until%3A2022-01-01
 
 driver.get(url)
 
@@ -70,35 +81,12 @@ password_input = driver.find_element(
 )
 password_input.send_keys(password)
 password_input.send_keys(Keys.ENTER)
+tweets = driver.find_elements(By.CSS_SELECTOR, '[data-testid="tweetText"]')
 
-# keyword = input("搜尋關鍵字: ")
-# start_date = input("起始日期(yyyy/mm/dd): ").replace("/", "")
-# end_date = input("終止日期(yyyy/mm/dd): ").replace("/", "")
-keyword = "tsla"
-start_date = "20200101"
-end_date = "20220101"
-start_year = start_date[:4]
-start_month = int(start_date[4:6].replace("0", ""))
-start_day = int(start_date[6:].replace("0", ""))
-end_year = end_date[:4]
-end_month = int(end_date[4:6].replace("0", ""))
-end_day = int(end_date[6:].replace("0", ""))
-WebDriverWait(driver, 20).until(
-    EC.presence_of_element_located((By.XPATH, "//input[@name='allOfTheseWords']"))
-)
-search_box = driver.find_element(By.XPATH, '//input[@name="allOfTheseWords"]')
-search_box.send_keys(keyword)
-start_month_selector = Select(driver.find_element("id", "SELECTOR_2"))
-start_day_selector = Select(driver.find_element("id", "SELECTOR_3"))
-start_year_selector = Select(driver.find_element("id", "SELECTOR_4"))
-end_month_selector = Select(driver.find_element("id", "SELECTOR_5"))
-end_day_selector = Select(driver.find_element("id", "SELECTOR_6"))
-end_year_selector = Select(driver.find_element("id", "SELECTOR_7"))
-
-start_month_selector.select_by_index(start_month)
-start_day_selector.select_by_index(start_day)
-start_year_selector.select_by_value(start_year)
-end_month_selector.select_by_index(end_month)
-end_day_selector.select_by_index(end_day)
-end_year_selector.select_by_value(end_year)
-time.sleep(30)
+print(tweets)
+with open("./Data/tweets.txt", "w", encoding="utf-8") as file:
+    for tweet in tweets:
+        spans = tweet.find_elements(By.TAG_NAME, "span")
+        for span in spans:
+            file.write(span.text)
+            file.write("\n")
