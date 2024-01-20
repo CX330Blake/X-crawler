@@ -9,9 +9,54 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
 
+
+def debug():
+    with open("test.html", "w", encoding="utf-8") as file:
+        file.write(driver.page_source)
+
+
+def get_tweets(path):
+    flag = 0
+    tweet_count = 1
+    while True:
+        # 提取推文
+        tweets = driver.find_elements(By.CSS_SELECTOR, '[data-testid="tweetText"]')
+        # 寫入推文到文件
+        with open(path, "a", encoding="utf-8") as file:
+            for tweet in tweets:
+                spans = tweet.find_elements(By.TAG_NAME, "span")
+                file.write(f"{tweet_count}. ")
+                for span in spans:
+                    file.write(span.text.replace("\n", ""))
+                tweet_count += 1
+                for i in range(2):
+                    file.write("\n")
+
+        if flag == 1:
+            print(f"Found {tweet_count} tweet(s).")
+            break
+        # 等待新推文加載
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, '[data-testid="tweetText"]')
+            )
+        )
+
+        # 滾動到底部
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(2)  # 等待新的推文加載
+
+        # 查找指定元素
+        try:
+            driver.find_element(By.CSS_SELECTOR, ".css-175oi2r.r-4d76ec")
+            flag = 1
+        except:
+            continue
+
+
 my_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 chrome_options = webdriver.ChromeOptions()
-# chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless")
 chrome_options.add_argument("--log-level=3")
 chrome_options.add_argument(f"--user-agent={my_user_agent}")
 chrome_options.add_argument("--disable-dev-shm-usage")
@@ -21,7 +66,7 @@ email = "AN4126068@gs.ncku.edu.tw"
 username = "ccep_an4126068"
 password = "an4126068"
 
-keyword = "tsla"
+keyword = "tsla elon musk"
 start_date = "2020-01-01"
 end_date = "2022-01-01"
 # keyword = input("請輸入關鍵字(以空格分隔): ")
@@ -81,12 +126,33 @@ password_input = driver.find_element(
 )
 password_input.send_keys(password)
 password_input.send_keys(Keys.ENTER)
-tweets = driver.find_elements(By.CSS_SELECTOR, '[data-testid="tweetText"]')
 
-print(tweets)
-with open("./Data/tweets.txt", "w", encoding="utf-8") as file:
-    for tweet in tweets:
-        spans = tweet.find_elements(By.TAG_NAME, "span")
-        for span in spans:
-            file.write(span.text)
-            file.write("\n")
+WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="tweetText"]'))
+)
+
+
+# for i in range(10):
+#     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+#     time.sleep(2)
+
+# tweets = driver.find_elements(By.CSS_SELECTOR, '[data-testid="tweetText"]')
+
+# print(f"捕獲的推文數量：{len(tweets)}")
+
+
+# with open("./Data/tweets.txt", "w", encoding="utf-8") as file:
+#     count = 1
+#     for tweet in tweets:
+#         spans = tweet.find_elements(By.TAG_NAME, "span")
+#         file.write(f"{count}. ")
+#         for span in spans:
+#             file.write(span.text.replace("\n", ""))
+#         count += 1
+#         for i in range(2):
+#             file.write("\n")
+
+
+get_tweets(
+    f"./Data/{keyword.replace(" ", " - ")}_{start_date}_{end_date}.txt".replace(" ", "")
+)
