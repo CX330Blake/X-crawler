@@ -27,13 +27,16 @@ def get_tweets(path):
                 spans = tweet.find_elements(By.TAG_NAME, "span")
                 file.write(f"{tweet_count}. ")
                 for span in spans:
-                    file.write(span.text.replace("\n", ""))
+                    if "r-qvk6io" not in span.get_attribute(
+                        "class"
+                    ) and "r-lrvibr" not in span.get_attribute("class"):
+                        file.write(span.text.replace("\n", ""))
                 tweet_count += 1
                 for i in range(2):
                     file.write("\n")
 
         if flag == 1:
-            print(f"Found {tweet_count} tweet(s).")
+            print(f"Found {tweet_count - 1} tweet(s).")
             break
         # 等待新推文加載
         WebDriverWait(driver, 10).until(
@@ -48,7 +51,10 @@ def get_tweets(path):
 
         # 查找指定元素
         try:
-            driver.find_element(By.CSS_SELECTOR, ".css-175oi2r.r-4d76ec")
+            driver.find_element(
+                By.XPATH,
+                '//div[@class="css-175oi2r r-4d76ec"]//div[@class="css-175oi2r r-4d76ec"]',
+            )
             flag = 1
         except:
             continue
@@ -77,6 +83,7 @@ until = "until:" + end_date
 search = f"{keyword} {since} {until}".replace(" ", "%20").replace(":", "%3A")
 url = f"https://twitter.com/search?q={search}"
 # https://twitter.com/search?q=tsla%20since%3A2020-01-01%20until%3A2022-01-01
+# https://twitter.com/search?q=tsla%20elon%20musk%20since%3A2020-01-01%20until%3A2022-01-01
 
 driver.get(url)
 
