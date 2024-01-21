@@ -9,34 +9,42 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
 
-
 def debug():
     with open("test.html", "w", encoding="utf-8") as file:
         file.write(driver.page_source)
 
-
 def get_tweets(path):
     flag = 0
-    tweet_count = 1
+    tweet_count = 0
+    id_set = []
+    timeout = 3
+    last_write_time = time.time()
     while True:
+        print(f"Found {tweet_count} tweet(s) currently.")
+        current_time = time.time()
         # 提取推文
         tweets = driver.find_elements(By.CSS_SELECTOR, '[data-testid="tweetText"]')
         # 寫入推文到文件
         with open(path, "a", encoding="utf-8") as file:
             for tweet in tweets:
-                spans = tweet.find_elements(By.TAG_NAME, "span")
-                file.write(f"{tweet_count}. ")
-                for span in spans:
-                    if "r-qvk6io" not in span.get_attribute(
-                        "class"
-                    ) and "r-lrvibr" not in span.get_attribute("class"):
-                        file.write(span.text.replace("\n", ""))
-                tweet_count += 1
-                for i in range(2):
-                    file.write("\n")
+                id = tweet.get_attribute("id")
+                if id not in id_set:
+                    id_set.append(id)
+                    tweet_count += 1
+                    spans = tweet.find_elements(By.TAG_NAME, "span")
+                    file.write(f"{tweet_count}. ")
+                    for span in spans:
+                        if "r-qvk6io" not in span.get_attribute(
+                            "class"
+                        ) and "r-lrvibr" not in span.get_attribute("class"):
+                            file.write(span.text.replace("\n", ""))
+
+                    for i in range(2):
+                        file.write("\n")
+                    last_write_time = time.time()
 
         if flag == 1:
-            print(f"Found {tweet_count - 1} tweet(s).")
+            print(f"Found {tweet_count} tweet(s) FINALLY.")
             break
         # 等待新推文加載
         WebDriverWait(driver, 10).until(
@@ -45,19 +53,12 @@ def get_tweets(path):
             )
         )
 
-        # 滾動到底部
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)  # 等待新的推文加載
+        body = driver.find_element(By.TAG_NAME, "body")
+        body.send_keys(Keys.PAGE_DOWN)
+        time.sleep(1)  # 等待新的推文加載
 
-        # 查找指定元素
-        try:
-            driver.find_element(
-                By.XPATH,
-                '//div[@class="css-175oi2r r-4d76ec"]//div[@class="css-175oi2r r-4d76ec"]',
-            )
+        if current_time - last_write_time > timeout:
             flag = 1
-        except:
-            continue
 
 
 my_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -159,7 +160,11 @@ WebDriverWait(driver, 10).until(
 #         for i in range(2):
 #             file.write("\n")
 
-
-get_tweets(
-    f"./Data/{keyword.replace(" ", " - ")}_{start_date}_{end_date}.txt".replace(" ", "")
-)
+while True:
+    try:
+        get_tweets(
+            f"./Data/{keyword.replace(" ", " - ")}_{start_date}_{end_date}.txt".replace(" ", "")
+        )
+        break
+    except Exception as e:
+        print(f"{e}")
