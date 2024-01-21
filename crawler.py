@@ -8,12 +8,28 @@ from selenium.webdriver.support.ui import Select
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
+import json
 
 def debug():
     with open("test.html", "w", encoding="utf-8") as file:
         file.write(driver.page_source)
 
-def get_tweets(path):
+def parse_count_string(count_str):
+    multipliers = 1
+    if "K" in count_str:
+        multipliers = 1000
+    elif "M" in count_str:
+        multipliers = 1000000
+    count_str = count_str.replace('K', '').replace('M', '')
+
+    try:
+        count = int(float(count_str) * multipliers) 
+        return count
+    except ValueError:
+        return None
+
+def get_tweets_txt(path):
+    path += ".txt"
     flag = 0
     tweet_count = 0
     id_set = []
@@ -60,6 +76,67 @@ def get_tweets(path):
         if current_time - last_write_time > timeout:
             flag = 1
 
+def get_tweets_json(path):
+    path += ".json"
+    flag = 0
+    id_set = []
+    timeout = 5
+    last_write_time = time.time()
+    tweets_data_list = []
+    
+    while True:
+        print(f"Found {len(tweets_data_list)} tweet(s) currently.")
+        current_time = time.time()
+        articles = driver.find_elements(By.TAG_NAME, "article")
+        
+        for article in articles:
+            data = {
+                "text": "",
+                "likes": 0,
+                "replies": 0,
+                "retweets": 0  
+            }
+            try:
+                tweet = article.find_element(By.CSS_SELECTOR, '[data-testid="tweetText"]')
+            except:
+                continue
+            spans = tweet.find_elements(By.TAG_NAME, "span")
+            id = tweet.get_attribute("id")
+            
+            for span in spans:
+                if "r-qvk6io" not in span.get_attribute("class") and "r-lrvibr" not in span.get_attribute("class"):
+                    data["text"] += span.text.replace("\n", "")
+                    
+            likes = article.find_element(By.CSS_SELECTOR, '[data-testid="like"]').text
+            replies = article.find_element(By.CSS_SELECTOR, '[data-testid="reply"]').text
+            retweets = article.find_element(By.CSS_SELECTOR, '[data-testid="retweet"]').text
+            
+            data["likes"] = parse_count_string(likes)
+            data["replies"] = parse_count_string(replies)
+            data["retweets"] = parse_count_string(retweets)
+            
+            if id not in id_set:
+                id_set.append(id)
+                tweets_data_list.append(data)
+                last_write_time = time.time()
+        
+        if flag == 1:
+            print(f"Found {len(tweets_data_list)} tweet(s) FINALLY.")
+            break
+        
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.TAG_NAME, "article"))
+        )
+        
+        body = driver.find_element(By.TAG_NAME, "body")
+        body.send_keys(Keys.PAGE_DOWN)
+        time.sleep(0.5)
+        
+        if current_time - last_write_time > timeout:
+            flag = 1
+    tweets_dict = {f"tweet_{i + 1}": tweet_data for i, tweet_data in enumerate(tweets_data_list)}
+    with open(path, "w", encoding="utf-8") as file:
+        json.dump(tweets_dict, file, ensure_ascii=False, indent=4)
 
 my_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 chrome_options = webdriver.ChromeOptions()
@@ -73,7 +150,7 @@ email = "AN4126068@gs.ncku.edu.tw"
 username = "ccep_an4126068"
 password = "an4126068"
 
-keyword = "tsla elon musk"
+keyword = "tsla"
 start_date = "2020-01-01"
 end_date = "2022-01-01"
 # keyword = input("請輸入關鍵字(以空格分隔): ")
@@ -140,30 +217,10 @@ WebDriverWait(driver, 10).until(
 )
 
 
-# for i in range(10):
-#     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-#     time.sleep(2)
-
-# tweets = driver.find_elements(By.CSS_SELECTOR, '[data-testid="tweetText"]')
-
-# print(f"捕獲的推文數量：{len(tweets)}")
-
-
-# with open("./Data/tweets.txt", "w", encoding="utf-8") as file:
-#     count = 1
-#     for tweet in tweets:
-#         spans = tweet.find_elements(By.TAG_NAME, "span")
-#         file.write(f"{count}. ")
-#         for span in spans:
-#             file.write(span.text.replace("\n", ""))
-#         count += 1
-#         for i in range(2):
-#             file.write("\n")
-
 while True:
     try:
-        get_tweets(
-            f"./Data/{keyword.replace(" ", " - ")}_{start_date}_{end_date}.txt".replace(" ", "")
+        get_tweets_json(
+            f"./Data/{keyword.replace(" ", " - ")}_{start_date}_{end_date}".replace(" ", "")
         )
         break
     except Exception as e:
