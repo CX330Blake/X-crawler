@@ -173,9 +173,9 @@ email = "AN4126068@gs.ncku.edu.tw"
 username = "ccep_an4126068"
 password = "an4126068"
 
-keyword = "tsla elon musk"
-start_date = "2020-01-01"
-end_date = "2022-01-01"
+keyword = "tesla"
+start_date = "2015-01-01"
+end_date = "2020-12-31"
 # keyword = input("請輸入關鍵字(以空格分隔): ")
 # start_date = input("請輸入起始日期(yyyy-mm-dd): ")
 # end_date = input("請輸入終止日期(yyyy-mm-dd): ")
