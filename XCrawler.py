@@ -189,8 +189,6 @@ class crawler:
         progress_bar_length = 50
                
         while current_date <= end_date:
-               
-               
                      
             email = self.email
             username = self.username
@@ -210,7 +208,6 @@ class crawler:
             self.driver.get(url)
             
             try:
-                
                 WebDriverWait(self.driver, 10).until(
                     EC.presence_of_element_located(
                         (
@@ -258,10 +255,11 @@ class crawler:
                 )
                 password_input.send_keys(password)
                 password_input.send_keys(Keys.ENTER)
-                print(f"Log in successfully", end="\r")
+                print(f"Login successfully", end="\r")
                 time.sleep(5)
             except:
-                pass
+                print("Please double check your login information")
+                exit()
         
             days_passed = (current_date - start_date ).days
             progress_percent = (days_passed / total_days) * 100 
@@ -308,12 +306,12 @@ if not os.path.exists(dir_path):
 x_crawler = crawler(
     keyword="tesla",
     start_date="2024-01-01",
-    end_date="2024-05-30",
-    email = "USERNAME@gmail.com",
-    username = "USERNAME",
-    password = "********",
-    Ppath=dir_path,
-    debug=False
+    end_date="2024-01-02",
+    email = "AN4126068@gs.ncku.edu.tw",
+    username = "ccep_an4126068",
+    password = "an4126068",
+    path=dir_path,
+    debug=False # This means a headless browser will be used.
 )
 x_crawler.crawl() 
 x_crawler.write_to_json()
