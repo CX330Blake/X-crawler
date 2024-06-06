@@ -304,17 +304,15 @@ class crawler:
 dir_path = "./new_tweets/"
 if not os.path.exists(dir_path):
     os.makedirs(dir_path) 
+    
 x_crawler = crawler(
     keyword="tesla",
     start_date="2024-01-01",
     end_date="2024-05-30",
-    email = "AN4126068@gs.ncku.edu.tw",
-    username = "ccep_an4126068",
-    password = "an4126068",
-    # email="AN4124024@gs.ncku.edu.tw",
-    # username="ChenAlex688192",
-    # password="alex1028",
-    path=dir_path,
+    email = "USERNAME@gmail.com",
+    username = "USERNAME",
+    password = "********",
+    Ppath=dir_path,
     debug=False
 )
 x_crawler.crawl() 
