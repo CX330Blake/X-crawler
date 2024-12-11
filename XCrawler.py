@@ -309,7 +309,7 @@ x_crawler = crawler(
     end_date="2024-01-02",
     email = "AN4126068@gs.ncku.edu.tw",
     username = "ccep_an4126068",
-    password = "an4126068",
+    password = "an4126068", # It's an old password so there's no info leak issue >_<
     path=dir_path,
     debug=False # This means a headless browser will be used.
 )
